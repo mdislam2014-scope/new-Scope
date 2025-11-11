@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""
+Scope Adjustment Lookup Tool
+For 7mm-08 or .30-06 Norma Whitetail 150 gr loads.
+Zero = 50 yards • 1 click = 1/4 MOA
+"""
+
+# -------------------------
+# Data: 7mm-08 Norma Whitetail 150 gr
+# -------------------------
+NEW_RAW_SCOPE_DATA_7MM = [
+    {"range": 50, "rel_inches": 0.00},
+    {"range": 60, "rel_inches": 0.06},
+    {"range": 70, "rel_inches": 0.12},
+    {"range": 80, "rel_inches": 0.20},
+    {"range": 90, "rel_inches": 0.28},
+    {"range": 100, "rel_inches": 0.30},
+    {"range": 110, "rel_inches": 0.28},
+    {"range": 120, "rel_inches": 0.18},
+    {"range": 130, "rel_inches": 0.02},
+    {"range": 140, "rel_inches": -0.18},
+    {"range": 150, "rel_inches": -0.40},
+    {"range": 160, "rel_inches": -0.78},
+    {"range": 170, "rel_inches": -1.20},
+    {"range": 180, "rel_inches": -1.70},
+    {"range": 190, "rel_inches": -2.40},
+    {"range": 200, "rel_inches": -3.40},
+    {"range": 210, "rel_inches": -4.45},
+    {"range": 220, "rel_inches": -5.60},
+    {"range": 230, "rel_inches": -6.90},
+    {"range": 240, "rel_inches": -8.40},
+    {"range": 250, "rel_inches": -10.10},
+    {"range": 260, "rel_inches": -12.00},
+    {"range": 270, "rel_inches": -14.10},
+    {"range": 280, "rel_inches": -16.35},
+    {"range": 290, "rel_inches": -18.75},
+    {"range": 300, "rel_inches": -21.30},
+    {"range": 310, "rel_inches": -24.00},
+    {"range": 320, "rel_inches": -26.85},
+    {"range": 330, "rel_inches": -29.85},
+    {"range": 340, "rel_inches": -33.00},
+    {"range": 350, "rel_inches": -36.30},
+    {"range": 360, "rel_inches": -39.75},
+    {"range": 370, "rel_inches": -43.35},
+    {"range": 380, "rel_inches": -47.10},
+    {"range": 390, "rel_inches": -51.00},
+    {"range": 400, "rel_inches": -55.05},
+    {"range": 410, "rel_inches": -59.25},
+    {"range": 420, "rel_inches": -63.60},
+    {"range": 430, "rel_inches": -68.10},
+    {"range": 440, "rel_inches": -72.75},
+    {"range": 450, "rel_inches": -77.55},
+    {"range": 460, "rel_inches": -82.50},
+    {"range": 470, "rel_inches": -87.60},
+    {"range": 480, "rel_inches": -92.85},
+    {"range": 490, "rel_inches": -98.25},
+    {"range": 500, "rel_inches": -103.80}
+]
+
+# -------------------------
+# Data: .30-06 Norma Whitetail 150 gr
+# -------------------------
+NEW_RAW_SCOPE_DATA_30 = [
+    {"range": 50, "rel_inches": 0.00},
+    {"range": 60, "rel_inches": 0.05},
+    {"range": 70, "rel_inches": 0.10},
+    {"range": 80, "rel_inches": 0.15},
+    {"range": 90, "rel_inches": 0.20},
+    {"range": 100, "rel_inches": 0.125},  # 1/8 inch at 100 yd
+    {"range": 110, "rel_inches": 0.15},
+    {"range": 120, "rel_inches": 0.00},
+    {"range": 130, "rel_inches": -0.20},
+    {"range": 140, "rel_inches": -0.40},
+    {"range": 150, "rel_inches": -0.60},
+    {"range": 160, "rel_inches": -0.90},
+    {"range": 170, "rel_inches": -1.30},
+    {"range": 180, "rel_inches": -1.90},
+    {"range": 190, "rel_inches": -2.60},
+    {"range": 200, "rel_inches": -3.50},
+    {"range": 210, "rel_inches": -4.60},
+    {"range": 220, "rel_inches": -5.80},
+    {"range": 230, "rel_inches": -7.10},
+    {"range": 240, "rel_inches": -8.60},
+    {"range": 250, "rel_inches": -10.10},
+    {"range": 260, "rel_inches": -12.00},
+    {"range": 270, "rel_inches": -14.20},
+    {"range": 280, "rel_inches": -16.40},
+    {"range": 290, "rel_inches": -18.60},
+    {"range": 300, "rel_inches": -21.30},
+    {"range": 310, "rel_inches": -23.90},
+    {"range": 320, "rel_inches": -26.80},
+    {"range": 330, "rel_inches": -29.80},
+    {"range": 340, "rel_inches": -33.00},
+    {"range": 350, "rel_inches": -36.30},
+    {"range": 360, "rel_inches": -39.70},
+    {"range": 370, "rel_inches": -43.30},
+    {"range": 380, "rel_inches": -47.10},
+    {"range": 390, "rel_inches": -51.00},
+    {"range": 400, "rel_inches": -55.10},
+    {"range": 410, "rel_inches": -59.30},
+    {"range": 420, "rel_inches": -63.60},
+    {"range": 430, "rel_inches": -68.10},
+    {"range": 440, "rel_inches": -72.70},
+    {"range": 450, "rel_inches": -77.50},
+    {"range": 460, "rel_inches": -82.50},
+    {"range": 470, "rel_inches": -87.60},
+    {"range": 480, "rel_inches": -92.90},
+    {"range": 490, "rel_inches": -98.20},
+    {"range": 500, "rel_inches": -103.80}
+]
+
+# -------------------------
+# Helper math
+# -------------------------
+def inches_per_moa_at(range_yd):
+    return 1.047 * (range_yd / 100.0)
+
+def calculate_clicks(range_yd, rel_in):
+    if range_yd == 0:
+        return 0.0
+    moa = rel_in / inches_per_moa_at(range_yd)
+    clicks = -moa * 4.0  # negative: positive impact -> dial down
+    return clicks
+
+# -------------------------
+# Lookup function
+# -------------------------
+def get_adjustment(data, target_range_yd):
+    for d in data:
+        if d["range"] == target_range_yd:
+            rel_in = d["rel_inches"]
+            raw_clicks = calculate_clicks(target_range_yd, rel_in)
+            rounded_clicks = round(raw_clicks)
+
+            if rounded_clicks > 0:
+                direction = "UP"
+            elif rounded_clicks < 0:
+                direction = "DOWN"
+            else:
+                direction = "—"
+
+            # Add “drop/high” wording
+            if rel_in > 0:
+                drop_text = f"high {rel_in:.2f} inch"
+            elif rel_in < 0:
+                drop_text = f"drop {abs(rel_in):.2f} inch"
+            else:
+                drop_text = "0 inch"
+
+            click_text = f"{abs(rounded_clicks)} {direction}" if direction != "—" else "0"
+            return drop_text, click_text
+
+    return None, None
+
+# -------------------------
+# Main interaction functions
+# -------------------------
+def run_lookup(caliber_name, data):
+    while True:
+        try:
+            dist = int(input(f"\nEnter distance for {caliber_name} (yards, 50–500): ").strip())
+        except ValueError:
+            print("Please enter a number.")
+            continue
+
+        drop, clicks = get_adjustment(data, dist)
+        if drop is None:
+            print("Range not available (use multiples of 10 from 50–500).")
+        else:
+            print(f"\n--- {caliber_name} ---")
+            print(f"Distance: {dist} yd")
+            print(f"Impact: {drop}")
+            print(f"Scope adjustment: {clicks}")
+            print("------------------------------")
+
+        again = input("\nDo you want another range for this caliber? (y/n): ").strip().lower()
+        if again != "y":
+            break
+
+def main():
+    print("----------------------------------------------------------")
+    print("   Scope Adjustment Lookup Tool (Zero = 50 yards)")
+    print("----------------------------------------------------------")
+
+    while True:
+        choice = input("\nPick caliber (type '06' or '08', or 'exit' to quit): ").strip().lower()
+        if choice in ["exit", "quit"]:
+            print("Goodbye!")
+            break
+        elif choice == "06":
+            run_lookup(".30-06 Springfield Norma Whitetail 150 gr", NEW_RAW_SCOPE_DATA_30)
+        elif choice == "08":
+            run_lookup("7mm-08 Norma Whitetail 150 gr", NEW_RAW_SCOPE_DATA_7MM)
+        else:
+            print("Please type '06' or '08'.")
+
+if __name__ == "__main__":
+    main()
